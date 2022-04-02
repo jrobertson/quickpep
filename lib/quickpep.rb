@@ -6,18 +6,25 @@ require 'dynarex'
 require 'event_nlp'
 
 # Quick Personal Expenses Planner - for people too lazy to use a
-#                                   spreadsheet or finance app
+#                                   spreadsheet or sfinance app
 #
 class QuickPep
+  using ColouredText
 
   attr_reader :to_s
 
   def initialize(s, balance: 0, currency: '', debug: false)
 
     @balance, @currency, @debug = balance, currency, debug
-    
+    @warnings = []
     @to_s = calc_expenses(s)
 
+    warnings() if @warnings.any?
+
+  end
+
+  def warnings()
+    @warnings.each {|warning| puts warning.warn }
   end
 
   private
@@ -47,23 +54,52 @@ class QuickPep
 
     a = date_events.map do |date, title|
 
-      puts '2. title: '  + title.inspect if @debug
+      if @debug then
+        puts '2. title: '  + title.inspect
+        puts 'date: '  + date.inspect
+      end
+
       credit, debit = 0.0, 0.0
       amount = h[title].amount
 
       if amount[0] == '+' then
+
         credit = amount.gsub(/\D/,'').to_f
+
+        if @debug then
+          puts 'credit: ' + credit.inspect
+          puts 'balance: ' + bal.inspect
+        end
+
         bal +=credit
+        puts 'after credit, balance: ' + bal.inspect if @debug
+
       else
+
         debit = amount.gsub(/\D/,'').to_f
+
+        if @debug then
+          puts 'debit: ' + debit.inspect
+          puts 'balance: ' + bal.inspect
+        end
+
         bal -= debit
+
+        puts 'after debug, balance: ' + bal.inspect if @debug
+
+        if bal < 0 then
+          @warnings << "date: %s, balance is below zero at %s" % [date,
+                                            bal.to_s.sub(/-/,'-' + @currency)]
+        end
+
       end
 
       [date, title, debit, credit, bal]
 
     end
 
-    dx2 = Dynarex.new('items/item(date, title, debit, credit, balance)')
+    dx2 = Dynarex.new('items/item(date, title, debit, credit, balance)', debug: @debug)
+    dx2.default_key = :uid
 
     a.each do |date, title, debit, credit, balance|
 
@@ -74,14 +110,14 @@ class QuickPep
         title: title,
         debit: debit > 0 ? (@currency + "%.2f" % debit) : '',
         credit: credit > 0 ? (@currency + "%.2f" % credit) : '',
-        balance: @currency + "%.2f" % balance
+        balance: (@currency + "%.2f" % balance).sub(/#{@currency}-/, + '-' + @currency)
       }
 
       dx2.create row
     end
 
-    dx2.to_table
+    dx2.to_table #(fields: %i(date title debit: credit: balance:))
+
   end
 
 end
-
