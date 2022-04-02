@@ -100,6 +100,7 @@
 --------------------------------------------------------------------
 </pre>
 
+note: In the recurring column of the input, you can add a start date e.g. every 2 weeks (starting 31st March 2022).
 
 ## Resources
 
