@@ -23,6 +23,24 @@ class QuickPep
 
   end
 
+  def annual_costs()
+
+    a = @date_events.map do |date, title|
+
+      amount = @h[title].amount
+
+      prefix = amount[0] == '+' ? '' : '-'
+      amountx = (prefix + amount.gsub(/\D/,'')).to_f
+
+      [date, title, amountx]
+
+    end
+
+    a.group_by {|date,title, amount| title }\
+        .map {|key, rows| [key, rows.map(&:last).sum]}.sort_by(&:last)
+
+  end
+
   def warnings()
     @warnings.each {|warning| puts warning.warn }
   end
@@ -33,9 +51,9 @@ class QuickPep
 
     dx = Dynarex.new(s)
 
-    h = dx.all.map {|x| [x.title, x]}.to_h
+    @h = dx.all.map {|x| [x.title, x]}.to_h
 
-    date_events = dx.all.flat_map do |rx|
+    @date_events = dx.all.flat_map do |rx|
 
       title = [rx.title, rx.day, rx.recurring].join(' ')
       puts '1. title: ' + title.inspect if @debug
@@ -51,8 +69,9 @@ class QuickPep
 
     # opening balance
     bal = @balance
+    @warnings = []
 
-    a = date_events.map do |date, title|
+    a = @date_events.map do |date, title|
 
       if @debug then
         puts '2. title: '  + title.inspect
@@ -60,7 +79,7 @@ class QuickPep
       end
 
       credit, debit = 0.0, 0.0
-      amount = h[title].amount
+      amount = @h[title].amount
 
       if amount[0] == '+' then
 
