@@ -13,9 +13,10 @@ class QuickPep
 
   attr_reader :to_s
 
-  def initialize(s, balance: 0, currency: '', debug: false)
+  def initialize(s, balance: 0, currency: '', today: Date.today, debug: false)
 
     @balance, @currency, @debug = balance, currency, debug
+    @today = today
     @warnings = []
     @to_s = calc_expenses(s)
 
@@ -23,9 +24,11 @@ class QuickPep
 
   end
 
-  def annual_costs()
+  # options: year, month, weel, day
+  #
+  def annual_costs(perx=:year, per: perx)
 
-    a = @date_events.map do |date, title|
+    rows = @date_events.map do |date, title|
 
       amount = @h[title].amount
 
@@ -36,8 +39,24 @@ class QuickPep
 
     end
 
-    a.group_by {|date,title, amount| title }\
+    a = rows.group_by {|date,title, amount| title }\
         .map {|key, rows| [key, rows.map(&:last).sum]}.sort_by(&:last)
+
+    a.map do |title, total|
+
+      amount = case per.to_sym
+      when :year
+        total
+      when :month
+        total / (12 - @today.month)
+      when :week
+        total / (52 - @today.cweek )
+      when :day
+        total / (365 - @today.yday)
+      end
+
+      [title, amount.round(2)]
+    end
 
   end
 
