@@ -60,12 +60,11 @@ class QuickPep
 
   end
 
-  def to_html()
+  def to_html(title: "Personal Budget #{@today.year}")
 
     t = to_dx().to_table
     t.labels =  %w(date title debit: credit: balance: uid:)
     table = t.display markdown: true
-    title = "Personal Budget #{Date.today.year}"
 
     "<html>
       <head>
@@ -106,15 +105,17 @@ class QuickPep
 
     @h = dx.all.map {|x| [x.title, x]}.to_h
 
-    @date_events = dx.all.flat_map do |rx|
+    date_events = dx.all.flat_map do |rx|
 
       title = [rx.title, rx.day, rx.recurring].join(' ')
       puts '1. title: ' + title.inspect if @debug
-      e = EventNlp.new()
+      e = EventNlp.new(@today.to_time)
       e.project(title).map {|x| [x.to_date, e.parse(title).title]}
 
     end.clone.sort_by(&:first)
 
+    # remove any dates less than the current date
+    @date_events = date_events.reject {|date, _| date < @today }
 
     # identify the source of income
     found = dx.all.find {|x| x.amount[0] == '+'}
