@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'quickpep'
-  s.version = '0.1.3'
+  s.version = '0.1.4'
   s.summary = 'Quick Personal Expenses Planner - for people too lazy to use a spreadsheet or finance app.'
   s.authors = ['James Robertson']
   s.files = Dir["lib/quickpep.rb"]

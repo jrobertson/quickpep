@@ -11,7 +11,7 @@ require 'event_nlp'
 class QuickPep
   using ColouredText
 
-  attr_reader :to_s
+  attr_reader :to_s, :to_dx
 
   def initialize(s, balance: 0, currency: '', today: Date.today, debug: false)
 
@@ -136,7 +136,8 @@ class QuickPep
 
     end
 
-    dx2 = Dynarex.new('items/item(date, title, debit, credit, balance)', debug: @debug)
+    dx2 = Dynarex.new('items/item(date, title, debit, credit, balance)',
+                      debug: @debug)
     dx2.default_key = :uid
 
     a.each do |date, title, debit, credit, balance|
@@ -148,11 +149,14 @@ class QuickPep
         title: title,
         debit: debit > 0 ? (@currency + "%.2f" % debit) : '',
         credit: credit > 0 ? (@currency + "%.2f" % credit) : '',
-        balance: (@currency + "%.2f" % balance).sub(/#{@currency}-/, + '-' + @currency)
+        balance: (@currency + "%.2f" % balance).sub(/#{@currency}-/,
+                                                    '-' + @currency)
       }
 
       dx2.create row
     end
+
+    @to_dx = dx2
 
     dx2.to_table #(fields: %i(date title debit: credit: balance:))
 
