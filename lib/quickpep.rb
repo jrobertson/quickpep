@@ -67,7 +67,8 @@ class QuickPep
 
     tot = total_expenses().abs
     r = annual_costs()
-    a = r.map {|title, cost| [title, (100 / (tot / cost.abs)).round] }
+    a = r.select {| _, cost | cost < 0 }\
+        .map {|title, cost| [title, (100 / (tot / cost.abs)).round] }
 
     def a.to_table()
       TableFormatter.new(source: self,
@@ -94,7 +95,7 @@ class QuickPep
     t.labels =  %w(date: title debit: credit: balance: uid:)
     table = t.display markdown: true
 
-    tot = year_end_balance().abs
+    tot = total_expenses().abs
     costs_per_interval = "
 * daily: #{"%s%0.2f" % [@currency, (tot / 365.0)]}
 * weekly: #{"%s%0.2f" % [@currency, (tot / 52.0)]}
