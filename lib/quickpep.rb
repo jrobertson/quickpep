@@ -4,7 +4,7 @@
 
 require 'dynarex'
 require 'event_nlp'
-require 'quickpep'
+require 'weblet'
 
 
 # Quick Personal Expenses Planner - for people too lazy to use a
